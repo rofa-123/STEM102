@@ -1,6 +1,7 @@
 // Include necessary libraries
 #include <WiFi.h>
 #include <DHT.h>
+#include <WebServer.h>
 
 // DHT11 setup
 #define DHTPIN 4
@@ -27,7 +28,8 @@ float humidityThreshold = 55.0;       // Threshold for humidity in %
 int mq135Threshold = 300;             // Example threshold for MQ135 (analog value)
 int gp2y10Threshold = 100;            // Example threshold for GP2Y10 dust density
 
-// Create a WebServer
+// Create a WebServer object on port 80
+WebServer server(80);
 
 // Initialize sensors and pins
 void initSensors() {
@@ -104,16 +106,30 @@ void handleSensorData() {
 }
 
 // Function to connect to Wi-Fi
-
+void connectToWiFi() {
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("Successfully connected to WiFi!");
+    Serial.print("ESP32 IP Address: ");
+    Serial.println(WiFi.localIP());
+}
 
 // Function to start the web server
+void startServer() {
+    server.on("/data", handleSensorData);
+    server.begin();
+    Serial.println("Server started");
+}
 
 void setup() {
     Serial.begin(115200);
 
-    
+    connectToWiFi();
     initSensors();
-   
+    startServer();
 }
 
 void loop() {
